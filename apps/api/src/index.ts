@@ -30,7 +30,8 @@ app.route('/api/admin', adminRoutes);
 
 app.get('/health', (c) => c.json({ ok: true }));
 
-if (process.env.NODE_ENV === 'production') {
+// Serve the built React SPA in every environment except local Vite dev.
+if (process.env.NODE_ENV !== 'development') {
   // Static assets (JS/CSS from the Vite build)
   app.use('/assets/*', serveStatic({ root: './apps/web/dist' }));
 
