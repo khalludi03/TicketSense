@@ -43,7 +43,14 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route element={<Layout />}>
             <Route path="/" element={<RootRedirect />} />
-            <Route path="/tickets" element={<TicketList />} />
+            <Route
+              path="/tickets"
+              element={
+                <RequireAuth>
+                  <TicketList />
+                </RequireAuth>
+              }
+            />
             <Route
               path="/tickets/new"
               element={
