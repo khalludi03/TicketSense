@@ -1,10 +1,21 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { serveStatic } from 'hono/bun';
+import authRoutes from './routes/auth.js';
+import { errorHandler } from './lib/errors.js';
+import { csrf } from './middleware/csrf.js';
+import type { UserPayload } from './lib/auth.js';
 
-const app = new Hono();
+type Variables = {
+  user: UserPayload;
+};
+
+const app = new Hono<{ Variables: Variables }>();
 
 app.use(logger());
+app.use('/api/*', csrf);
+app.onError(errorHandler);
+app.route('/api/auth', authRoutes);
 
 app.get('/health', (c) => c.json({ ok: true }));
 

@@ -6,7 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["bun-types"],
+
     "baseUrl": ".",
     "paths": {
       "@ticketsense/shared": ["../../packages/shared/src"]
