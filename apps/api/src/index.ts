@@ -31,8 +31,10 @@ app.route('/api/admin', adminRoutes);
 app.get('/health', (c) => c.json({ ok: true }));
 
 if (process.env.NODE_ENV === 'production') {
-  app.use('/*', serveStatic({ root: './apps/web/dist' }));
+  // Static assets (JS/CSS from the Vite build)
+  app.use('/assets/*', serveStatic({ root: './apps/web/dist' }));
 
+  // SPA fallback: every non-API route returns the React app's index.html
   app.get('*', async () => {
     const file = Bun.file('./apps/web/dist/index.html');
     return new Response(file);
