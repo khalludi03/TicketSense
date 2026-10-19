@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@ticketsense/shared": ["../../packages/shared/src"]
+      "@ticketsense/shared": ["../../packages/shared/src"],
+      "@/*": ["./src/*"]
     },
     "noEmit": true
   },
