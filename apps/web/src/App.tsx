@@ -28,6 +28,12 @@ function RequireAuth({ children, role }: { children: React.ReactNode; role?: 'cu
   return <>{children}</>;
 }
 
+function RootRedirect() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <div className="p-8">Loading...</div>;
+  return <Navigate to={user ? '/tickets' : '/login'} replace />;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -36,7 +42,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route element={<Layout />}>
-            <Route path="/" element={<Navigate to="/tickets" replace />} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/tickets" element={<TicketList />} />
             <Route
               path="/tickets/new"
