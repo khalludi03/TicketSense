@@ -5,7 +5,10 @@ import authRoutes from './routes/auth.js';
 import ticketsRoutes from './routes/tickets.js';
 import { errorHandler } from './lib/errors.js';
 import { csrf } from './middleware/csrf.js';
+import { initClassifier } from './ai/classify.js';
 import type { UserPayload } from './lib/auth.js';
+
+await initClassifier();
 
 type Variables = {
   user: UserPayload;

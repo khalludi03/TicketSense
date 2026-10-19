@@ -3,10 +3,12 @@ import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
   addCommentSchema,
+  aiSuggestionActionSchema,
   assignTicketSchema,
   createTicketSchema,
   updateTicketStatusSchema,
 } from '@ticketsense/shared';
+import { classifyTicket } from '../ai/classify.js';
 import { db } from '../db/index.js';
 import {
   aiSuggestions,
@@ -119,9 +121,25 @@ ticketsApp.post('/', requireAuth, requireRole('customer'), async (c) => {
   const user = c.get('user');
   const body = validate(createTicketSchema, await c.req.json());
 
-  // TODO: replace with AI classifier in Block 4
-  const defaultCategoryId = 4; // General
-  const defaultPriority = 'medium';
+  let suggestedCategory = 'General';
+  let suggestedPriority: 'low' | 'medium' | 'high' = 'medium';
+  let confidence = 0;
+
+  try {
+    const suggestion = classifyTicket(`${body.title} ${body.description}`);
+    suggestedCategory = suggestion.category;
+    suggestedPriority = suggestion.priority as 'low' | 'medium' | 'high';
+    confidence = suggestion.confidence;
+  } catch (err) {
+    console.error('Classifier failed, using fallback', err);
+  }
+
+  const [categoryRow] = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.name, suggestedCategory))
+    .limit(1);
+  const categoryId = categoryRow?.id ?? 4;
 
   const [ticket] = await db
     .insert(tickets)
@@ -129,16 +147,16 @@ ticketsApp.post('/', requireAuth, requireRole('customer'), async (c) => {
       title: body.title,
       description: body.description,
       customerId: user.id,
-      categoryId: defaultCategoryId,
-      priority: defaultPriority,
+      categoryId,
+      priority: suggestedPriority,
     })
     .returning();
 
   await db.insert(aiSuggestions).values({
     ticketId: ticket.id,
-    suggestedCategoryId: defaultCategoryId,
-    suggestedPriority: defaultPriority,
-    confidence: 0,
+    suggestedCategoryId: categoryId,
+    suggestedPriority,
+    confidence,
     wasAccepted: null,
   });
 
@@ -221,6 +239,40 @@ ticketsApp.patch('/:id/assign', requireAuth, requireRole('agent', 'admin'), asyn
   }
 
   const [updated] = await db.update(tickets).set(updates).where(eq(tickets.id, id)).returning();
+  return c.json({ ticket: updated });
+});
+
+// Accept or override AI suggestion
+// PATCH /api/tickets/:id/suggestion
+ticketsApp.patch('/:id/suggestion', requireAuth, requireRole('agent', 'admin'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id');
+  const body = validate(aiSuggestionActionSchema, await c.req.json());
+
+  const ticket = await getTicketWithAccess(id, user);
+
+  if (body.accept) {
+    await db.update(aiSuggestions).set({ wasAccepted: true }).where(eq(aiSuggestions.ticketId, id));
+    return c.json({ ticket });
+  }
+
+  const [categoryRow] = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.id, body.categoryId))
+    .limit(1);
+  if (!categoryRow) {
+    throw new AppError(404, 'CATEGORY_NOT_FOUND', 'Category not found');
+  }
+
+  const [updated] = await db
+    .update(tickets)
+    .set({ categoryId: body.categoryId, priority: body.priority })
+    .where(eq(tickets.id, id))
+    .returning();
+
+  await db.update(aiSuggestions).set({ wasAccepted: false }).where(eq(aiSuggestions.ticketId, id));
+
   return c.json({ ticket: updated });
 });
 

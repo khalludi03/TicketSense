@@ -34,7 +34,17 @@ export const addCommentSchema = z.object({
   body: z.string().min(1, 'Comment cannot be empty'),
 });
 
+export const aiSuggestionActionSchema = z.discriminatedUnion('accept', [
+  z.object({ accept: z.literal(true) }),
+  z.object({
+    accept: z.literal(false),
+    categoryId: z.number().int(),
+    priority: z.enum(['low', 'medium', 'high']),
+  }),
+]);
+
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketStatusInput = z.infer<typeof updateTicketStatusSchema>;
 export type AssignTicketInput = z.infer<typeof assignTicketSchema>;
 export type AddCommentInput = z.infer<typeof addCommentSchema>;
+export type AiSuggestionActionInput = z.infer<typeof aiSuggestionActionSchema>;
