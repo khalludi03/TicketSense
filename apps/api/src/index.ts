@@ -50,3 +50,8 @@ Bun.serve({
 });
 
 console.log(`API server running on port ${port}`);
+console.log(`NODE_ENV=${process.env.NODE_ENV}, serving static SPA=${process.env.NODE_ENV !== 'development'}`);
+if (process.env.NODE_ENV !== 'development') {
+  const indexExists = await Bun.file('./apps/web/dist/index.html').exists();
+  console.log(`index.html exists=${indexExists}`);
+}
