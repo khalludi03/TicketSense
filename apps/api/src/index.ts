@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { serveStatic } from 'hono/bun';
 import authRoutes from './routes/auth.js';
+import ticketsRoutes from './routes/tickets.js';
 import { errorHandler } from './lib/errors.js';
 import { csrf } from './middleware/csrf.js';
 import type { UserPayload } from './lib/auth.js';
@@ -16,6 +17,7 @@ app.use(logger());
 app.use('/api/*', csrf);
 app.onError(errorHandler);
 app.route('/api/auth', authRoutes);
+app.route('/api/tickets', ticketsRoutes);
 
 app.get('/health', (c) => c.json({ ok: true }));
 

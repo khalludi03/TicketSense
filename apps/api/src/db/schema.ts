@@ -57,6 +57,7 @@ export const tickets = pgTable(
     status: statusEnum('status').notNull().default('open'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     resolvedAt: timestamp('resolved_at'),
+    resolutionNote: text('resolution_note'),
   },
   (table) => ({
     customerIdx: index('tickets_customer_id_idx').on(table.customerId),
