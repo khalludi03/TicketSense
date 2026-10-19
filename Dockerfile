@@ -3,7 +3,7 @@ FROM oven/bun:1-slim AS base
 WORKDIR /app
 
 # Copy workspace manifests first for efficient layer caching
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
@@ -24,6 +24,8 @@ COPY --from=base /app/apps/api ./apps/api
 COPY --from=base /app/apps/web/dist ./apps/web/dist
 COPY --from=base /app/packages ./packages
 COPY --from=base /app/package.json ./
+COPY --from=base /app/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 3000
-CMD ["bun", "run", "apps/api/src/index.ts"]
+CMD ["/app/docker-entrypoint.sh"]
