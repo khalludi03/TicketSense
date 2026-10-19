@@ -49,6 +49,10 @@ bun test
 | Agent | bullet@example.com | password123 |
 | Admin | rafiq@example.com | password123 |
 
+## Notes
+
+- Auth pages (`/login`, `/signup`) use shadcn-style CSS variables and support light/dark/system themes. Older app components still use hardcoded Tailwind colors and will be migrated in a future pass.
+
 ## Deploy
 
 1. Create a Neon PostgreSQL project and copy the **pooled** `DATABASE_URL`.
